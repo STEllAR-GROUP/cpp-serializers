@@ -50,7 +50,8 @@ ExternalProject_Add(
     BUILD_IN_SOURCE 1
 )
 set(Boost_INCLUDE_DIRS ${boost_PREFIX})
-set(BOOST_LIBRARIES ${boost_PREFIX}/lib/libboost_serialization.a)
+set(BOOST_LIBRARIES ${boost_PREFIX}/lib/libboost_serialization.a
+  ${boost_PREFIX}/lib/libboost_system.a)
 include_directories(${Boost_INCLUDE_DIRS}/include)
 message(STATUS "Using Boost from ${Boost_INCLUDE_DIRS}/include")
 
@@ -144,6 +145,8 @@ include_directories(${avro_PREFIX}/include)
 set(AVRO_LIBRARIES ${avro_PREFIX}/lib/libavrocpp_s.a)
 set(AVRO_GENERATOR ${avro_PREFIX}/bin/avrogencpp)
 
+find_package(HPX REQUIRED)
+
 set(LINKLIBS    ${THRIFT_LIBRARIES}
                 ${MSGPACK_LIBRARIES}
                 ${PROTOBUF_LIBRARIES}
@@ -152,6 +155,7 @@ set(LINKLIBS    ${THRIFT_LIBRARIES}
                 ${AVRO_LIBRARIES}
                 ${CMAKE_THREAD_LIBS_INIT}
                 ${ZLIB_LIBRARIES}
+                ${HPX_LIBRARIES}
 )
 
 add_custom_command(
@@ -217,6 +221,8 @@ set(AVRO_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/avro/record.hpp)
 set(BOOST_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/boost/record.cpp)
 set(CEREAL_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/cereal/record.cpp)
 
+set(HPX_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/hpx/record.cpp)
+ 
 add_executable(test ${cpp_serializers_SOURCE_DIR}/test.cpp
                     ${THRIFT_SERIALIZATION_SOURCES}
                     ${PROTOBUF_SERIALIZATION_SOURCES}
@@ -224,7 +230,9 @@ add_executable(test ${cpp_serializers_SOURCE_DIR}/test.cpp
                     ${BOOST_SERIALIZATION_SOURCES}
                     ${CEREAL_SERIALIZATION_SOURCES}
                     ${AVRO_SERIALIZATION_SOURCES}
+                    ${HPX_SERIALIZATION_SOURCES}
 )
-add_dependencies(test thrift msgpack protobuf capnproto boost cereal avro)
+add_dependencies(test thrift msgpack protobuf capnproto boost cereal avro hpx)
 target_link_libraries(test ${LINKLIBS})
-set_target_properties(test PROPERTIES COMPILE_FLAGS "-std=c++11")
+set_target_properties(test PROPERTIES COMPILE_FLAGS "-O3")
+hpx_setup_target(test)

@@ -6,6 +6,8 @@
 #include <chrono>
 #include <sstream>
 
+#include <hpx/config.hpp>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -25,6 +27,7 @@
 #include "msgpack/record.hpp"
 #include "cereal/record.hpp"
 #include "avro/record.hpp"
+#include "hpx/record.hpp"
 
 #include "data.hpp"
 
@@ -392,13 +395,50 @@ avro_serialization_test(size_t iterations)
     std::cout << "avro: time = " << duration << " milliseconds" << std::endl << std::endl;
 }
 
+void hpx_serialization_test(size_t iterations)
+{
+    using namespace hpx_test;
+
+    Record r1, r2;
+
+    for (size_t i = 0; i < kIntegers.size(); i++) {
+        r1.ids.push_back(kIntegers[i]);
+    }
+
+    for (size_t i = 0; i < kStringsCount; i++) {
+        r1.strings.push_back(kStringValue);
+    }
+
+    std::string serialized;
+
+    to_string(r1, serialized);
+    from_string(r2, serialized);
+
+    if (r1 != r2) {
+        throw std::logic_error("hpx's case: deserialization failed");
+    }
+
+    std::cout << "hpx: size = " << serialized.size() << " bytes" << std::endl;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < iterations; i++) {
+        serialized.clear();
+        to_string(r1, serialized);
+        from_string(r2, serialized);
+    }
+    auto finish = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+
+    std::cout << "hpx: time = " << duration << " milliseconds" << std::endl << std::endl;
+}
+
 int
 main(int argc, char **argv)
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     if (argc < 2) {
-        std::cout << "usage: " << argv[0] << " N [thrift-binary thrift-compact protobuf boost msgpack cereal avro]";
+        std::cout << "usage: " << argv[0] << " N [thrift-binary thrift-compact protobuf boost msgpack cereal avro hpx]";
         std::cout << std::endl << std::endl;
         std::cout << "arguments: " << std::endl;
         std::cout << " N  -- number of iterations" << std::endl << std::endl;
@@ -458,6 +498,10 @@ main(int argc, char **argv)
 
         if (names.empty() || names.find("avro") != names.end()) {
             avro_serialization_test(iterations);
+        }
+
+        if (names.empty() || names.find("hpx") != names.end()) {
+            hpx_serialization_test(iterations);
         }
     } catch (std::exception &exc) {
         std::cerr << "Error: " << exc.what() << std::endl;
