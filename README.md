@@ -54,12 +54,11 @@ on a typical desktop computer with Intel Core i5 processor running Ubuntu 14.04.
 Size mesuared in bytes, time mesuared in milliseconds.
 
 ##### Graphical representations
-##### !not updated yet
 
 ###### Size
 
-![Size](images/size.png)
+![Size](images/size-hpx.png)
 
 ###### Time
 
-![Time](images/time.png)
+![Time](images/time-hpx.png)
