@@ -28,6 +28,7 @@
 #include "cereal/record.hpp"
 #include "avro/record.hpp"
 #include "hpx/record.hpp"
+#include "hpx_zero_copy/record.hpp"
 
 #include "data.hpp"
 
@@ -432,6 +433,43 @@ void hpx_serialization_test(size_t iterations)
     std::cout << "hpx: time = " << duration << " milliseconds" << std::endl << std::endl;
 }
 
+void hpx_zero_copy_serialization_test(size_t iterations)
+{
+    using namespace hpx_zero_copy_test;
+
+    Record r1, r2;
+
+    for (size_t i = 0; i < kIntegers.size(); i++) {
+        r1.ids.push_back(kIntegers[i]);
+    }
+
+    for (size_t i = 0; i < kStringsCount; i++) {
+        r1.strings.push_back(kStringValue);
+    }
+
+    std::string serialized;
+
+    to_string(r1, serialized);
+    from_string(r2, serialized);
+
+    if (r1 != r2) {
+        throw std::logic_error("hpx's case: deserialization failed");
+    }
+
+    std::cout << "hpx: size = " << serialized.size() << " bytes" << std::endl;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < iterations; i++) {
+        serialized.clear();
+        to_string(r1, serialized);
+        from_string(r2, serialized);
+    }
+    auto finish = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+
+    std::cout << "hpx: time = " << duration << " milliseconds" << std::endl << std::endl;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -502,6 +540,10 @@ main(int argc, char **argv)
 
         if (names.empty() || names.find("hpx") != names.end()) {
             hpx_serialization_test(iterations);
+        }
+
+        if (names.empty() || names.find("hpx_zero_copy") != names.end()) {
+            hpx_zero_copy_serialization_test(iterations);
         }
     } catch (std::exception &exc) {
         std::cerr << "Error: " << exc.what() << std::endl;

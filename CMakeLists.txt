@@ -222,6 +222,7 @@ set(BOOST_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/boost/record.cpp)
 set(CEREAL_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/cereal/record.cpp)
 
 set(HPX_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/hpx/record.cpp)
+set(HPX_ZERO_COPY_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/hpx_zero_copy/record.cpp)
  
 add_executable(test ${cpp_serializers_SOURCE_DIR}/test.cpp
                     ${THRIFT_SERIALIZATION_SOURCES}
@@ -231,6 +232,7 @@ add_executable(test ${cpp_serializers_SOURCE_DIR}/test.cpp
                     ${CEREAL_SERIALIZATION_SOURCES}
                     ${AVRO_SERIALIZATION_SOURCES}
                     ${HPX_SERIALIZATION_SOURCES}
+                    ${HPX_ZERO_COPY_SERIALIZATION_SOURCES}
 )
 add_dependencies(test thrift msgpack protobuf capnproto boost cereal avro hpx)
 target_link_libraries(test ${LINKLIBS})
