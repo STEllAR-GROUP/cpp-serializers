@@ -457,10 +457,10 @@ void hpx_zero_copy_serialization_test(size_t iterations)
     from_string(r2, serialized);
 
     if (r1 != r2) {
-        throw std::logic_error("hpx's case: deserialization failed");
+        throw std::logic_error("hpx_zero_copy's case: deserialization failed");
     }
 
-    std::cout << "hpx: size = " << serialized.size() << " bytes" << std::endl;
+    std::cout << "hpx_zero_copy: size = " << serialized.size() << " bytes" << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < iterations; i++) {
@@ -471,7 +471,7 @@ void hpx_zero_copy_serialization_test(size_t iterations)
     auto finish = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
 
-    std::cout << "hpx: time = " << duration << " milliseconds" << std::endl << std::endl;
+    std::cout << "hpx_zero_copy: time = " << duration << " milliseconds" << std::endl << std::endl;
 }
 
 
