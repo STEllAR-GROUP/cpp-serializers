@@ -52,7 +52,7 @@ on a typical desktop computer with Intel Core i5 processor running Ubuntu 14.04.
 | hpx            | 17433         | 15847           |
 | hpx_zero_copy  | 33            | 860             |
 
-Size mesuared in bytes, time mesuared in milliseconds.
+Size measured in bytes, time measured in milliseconds.
 
 ##### Graphical representations
 
