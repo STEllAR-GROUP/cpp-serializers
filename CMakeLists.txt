@@ -38,8 +38,15 @@ if (NOT ZLIB_FOUND)
 endif()
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-set(boost_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost)
-ExternalProject_Add(
+if (NOT DEFINED WITH_SYSTEM_BOOST)
+  set(WITH_SYSTEM_BOOST false CACHE STRING "Determine whether to use the OS's version of Boost (true) or to build our own (false, default)" FORCE)
+endif()
+if(WITH_SYSTEM_BOOST)
+  find_package(Boost REQUIRED COMPONENTS serialization date_time)
+  set(BOOST_DEPENDENCY "")
+else()
+  set(boost_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost)
+  ExternalProject_Add(
     boost
     PREFIX ${boost_PREFIX}
     URL "http://netcologne.dl.sourceforge.net/project/boost/boost/1.56.0/boost_1_56_0.tar.gz"
@@ -48,18 +55,20 @@ ExternalProject_Add(
     BUILD_COMMAND ./bjam link=static cxxflags='-fPIC'
     INSTALL_COMMAND ./bjam link=static install
     BUILD_IN_SOURCE 1
-)
-set(Boost_INCLUDE_DIRS ${boost_PREFIX}/include)
-set(BOOST_LIBRARIES ${boost_PREFIX}/lib/libboost_serialization.a
-  ${boost_PREFIX}/lib/libboost_system.a)
-include_directories(${Boost_INCLUDE_DIRS})
+    )
+  set(Boost_INCLUDE_DIRS ${boost_PREFIX}/include)
+  set(BOOST_LIBRARIES ${boost_PREFIX}/lib/libboost_serialization.a
+    ${boost_PREFIX}/lib/libboost_system.a)
+  include_directories(${Boost_INCLUDE_DIRS})
+  set(BOOST_DEPENDENCY boost)
+endif()
 message(STATUS "Using Boost from ${Boost_INCLUDE_DIRS}")
 
 set(thrift_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/thrift)
 ExternalProject_Add(
     thrift
     PREFIX ${thrift_PREFIX}
-    DEPENDS boost
+    DEPENDS ${BOOST_DEPENDENCY}
     URL "http://www.eu.apache.org/dist/thrift/0.9.1/thrift-0.9.1.tar.gz"
     URL_MD5 "d2e46148f6e800a9492dbd848c66ab6e"
     CONFIGURE_COMMAND CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} ${thrift_PREFIX}/src/thrift/configure --prefix=${thrift_PREFIX} --with-boost=${Boost_PREFIX} --enable-shared=no --with-libevent=no --with-c_glib=no --with-java=no --with-erlang=no --with-python=no --with-perl=no --with-php=no --with-php_extension=no --with-ruby=no --with-haskell=no --with-go=no --with-d=no
@@ -131,7 +140,7 @@ include_directories(${cereal_PREFIX}/include)
 set(avro_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/avro)
 ExternalProject_Add(
     avro
-    DEPENDS boost
+    DEPENDS ${BOOST_DEPENDENCY}
     PREFIX ${avro_PREFIX}
     URL "http://www.eu.apache.org/dist/avro/avro-1.7.7/avro-src-1.7.7.tar.gz"
     URL_MD5 "352d8ee65f1ce1b43599be16eca7f264"
@@ -235,7 +244,7 @@ add_executable(test ${cpp_serializers_SOURCE_DIR}/test.cpp
                     ${HPX_SERIALIZATION_SOURCES}
                     ${HPX_ZERO_COPY_SERIALIZATION_SOURCES}
 )
-add_dependencies(test thrift msgpack protobuf capnproto boost cereal avro hpx)
+add_dependencies(test thrift msgpack protobuf capnproto ${BOOST_DEPENDENCY} cereal avro hpx)
 target_link_libraries(test ${LINKLIBS})
 set_target_properties(test PROPERTIES COMPILE_FLAGS "-O3")
 hpx_setup_target(test)
