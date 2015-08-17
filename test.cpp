@@ -5,6 +5,9 @@
 #include <memory>
 #include <chrono>
 #include <sstream>
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif
 
 #include <hpx/config.hpp>
 
@@ -29,6 +32,7 @@
 #include "avro/record.hpp"
 #include "hpx/record.hpp"
 #include "hpx_zero_copy/record.hpp"
+#include "mpi/record.hpp"
 
 #include "data.hpp"
 
@@ -470,9 +474,44 @@ void hpx_zero_copy_serialization_test(size_t iterations)
     std::cout << "hpx: time = " << duration << " milliseconds" << std::endl << std::endl;
 }
 
+
+void mpi_serialization_test(size_t iterations)
+{
+    using namespace mpi_test;
+
+    Record r1, r2;
+
+    for (size_t i = 0; i < kIntegers.size(); i++) {
+        r1.ids.push_back(kIntegers[i]);
+    }
+
+    for (size_t i = 0; i < kStringsCount; i++) {
+        r1.strings.push_back(kStringValue);
+    }
+
+    int total_size = determine_pack_size(r1);
+    std::string serialized(total_size, ' ');
+
+    std::cout << "mpi: size = " << serialized.size() << " bytes" << std::endl;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < iterations; i++) {
+        to_string(r1, serialized);
+        from_string(r2, serialized);
+    }
+    auto finish = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+
+    std::cout << "mpi: time = " << duration << " milliseconds" << std::endl << std::endl;
+}
+
 int
 main(int argc, char **argv)
 {
+#ifdef WITH_MPI
+    MPI_Init(&argc, &argv);
+#endif
+
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     if (argc < 2) {
@@ -545,6 +584,12 @@ main(int argc, char **argv)
         if (names.empty() || names.find("hpx_zero_copy") != names.end()) {
             hpx_zero_copy_serialization_test(iterations);
         }
+
+#ifdef WITH_MPI
+        if (names.empty() || names.find("mpi") != names.end()) {
+            mpi_serialization_test(iterations);
+        }
+#endif
     } catch (std::exception &exc) {
         std::cerr << "Error: " << exc.what() << std::endl;
         return EXIT_FAILURE;
@@ -552,5 +597,8 @@ main(int argc, char **argv)
 
     google::protobuf::ShutdownProtobufLibrary();
 
+#ifdef WITH_MPI
+    MPI_Finalize();
+#endif
     return EXIT_SUCCESS;
 }
