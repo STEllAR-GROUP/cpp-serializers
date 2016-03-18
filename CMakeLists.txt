@@ -76,8 +76,7 @@ ExternalProject_Add(
     thrift
     PREFIX ${thrift_PREFIX}
     DEPENDS ${BOOST_DEPENDENCY}
-    URL "http://www.eu.apache.org/dist/thrift/0.9.1/thrift-0.9.1.tar.gz"
-    URL_MD5 "d2e46148f6e800a9492dbd848c66ab6e"
+    URL "http://www-eu.apache.org/dist/thrift/0.9.3/thrift-0.9.3.tar.gz"
     CONFIGURE_COMMAND CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} ${thrift_PREFIX}/src/thrift/configure --prefix=${thrift_PREFIX} --with-boost=${Boost_PREFIX} --enable-shared=no --with-libevent=no --with-c_glib=no --with-java=no --with-erlang=no --with-python=no --with-perl=no --with-php=no --with-php_extension=no --with-ruby=no --with-haskell=no --with-go=no --with-d=no
     BUILD_COMMAND $(MAKE)
     INSTALL_COMMAND $(MAKE) install
@@ -136,8 +135,7 @@ set(cereal_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/cereal)
 ExternalProject_Add(
     cereal
     PREFIX ${cereal_PREFIX}
-    URL "https://github.com/USCiLab/cereal/archive/v1.0.0.tar.gz"
-    URL_MD5 "d1bacca70a95cec0ddbff68b0871296b"
+    URL "https://github.com/USCiLab/cereal/archive/v1.1.2.tar.gz"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND mkdir -p ${cereal_PREFIX}/include/ && cp -r ${cereal_PREFIX}/src/cereal/include/cereal ${cereal_PREFIX}/include/
@@ -149,8 +147,7 @@ ExternalProject_Add(
     avro
     DEPENDS ${BOOST_DEPENDENCY}
     PREFIX ${avro_PREFIX}
-    URL "http://www.eu.apache.org/dist/avro/avro-1.7.7/avro-src-1.7.7.tar.gz"
-    URL_MD5 "352d8ee65f1ce1b43599be16eca7f264"
+    URL "http://apache-mirror.rbc.ru/pub/apache/avro/avro-1.8.0/avro-src-1.8.0.tar.gz"
     CONFIGURE_COMMAND cmake -DBOOST_INCLUDEDIR=${boost_PREFIX}/include -DBOOST_LIBRARYDIR=${boost_PREFIX}/lib -DBoost_NO_SYSTEM_PATHS=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${avro_PREFIX} -DBUILD_SHARED_LIBS=OFF ${avro_PREFIX}/src/avro/lang/c++/
     # Due to some issues with using statically built boost libraries AND zlib in avro tests
     # build only necessary parts and install them in a very hackish way.
