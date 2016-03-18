@@ -30,27 +30,27 @@ $ ./test 100000 protobuf cereal
 #### Results
 
 Following results were obtained running 1000000 serialize-deserialize operations 50 times and then averaging results
-on a typical desktop computer with Intel Core i5 processor running Ubuntu 14.04. Exact versions of libraries used are:
+on a typical desktop computer with Intel Xeon CPU E5-2450 processor running Debian. Compiler was gcc-6.0 (from trunk). Exact versions of libraries used are:
 
-* thrift 0.9.1
+* thrift 0.9.3
 * protobuf 2.6.0
-* boost 1.56.0
+* boost 1.60.0
 * msgpack 0.5.9
-* cereal 1.0.0
+* cereal 1.1.2
 * avro 1.7.7
-* hpx 0.9.11
+* hpx 0.9.12
 
 | serializer     | object's size | avg. total time |
 | -------------- | ------------- | --------------- |
-| thrift-binary  | 17017         | 28416           |
-| thrift-compact | 11597         | 34301           |
-| protobuf       | 12571         | 30337           |
-| boost          | 17470         | 25062           |
-| msgpack        | 11902         | 29973           |
-| cereal         | 17416         | 13309           |
+| thrift-binary  | 17017         | 28025           |
+| thrift-compact | 11597         | 33802           |
+| protobuf       | 12571         | 23843           |
+| boost          | 17470         | 16188           |
+| msgpack        | 11902         | 30051           |
+| cereal         | 17416         | 13083           |
 | avro           | 12288         | 38225           |
-| hpx            | 17433         | 15847           |
-| hpx_zero_copy  | 33            | 860             |
+| hpx            | 17433         | 12371           |
+| hpx_zero_copy  | 9433          | 8138            |
 
 Size measured in bytes, time measured in milliseconds.
 
