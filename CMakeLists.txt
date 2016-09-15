@@ -158,6 +158,19 @@ include_directories(${avro_PREFIX}/include)
 set(AVRO_LIBRARIES ${avro_PREFIX}/lib/libavrocpp_s.a)
 set(AVRO_GENERATOR ${avro_PREFIX}/bin/avrogencpp)
 
+set(yas_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/yas)
+ExternalProject_Add(
+    yas
+    DEPENDS boost
+    PREFIX ${yas_PREFIX}
+#    URL "https://github.com/niXman/yas/archive/master.zip"
+    URL "https://github.com/pmed/yas/archive/improve-shared_buffer.zip"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND mkdir -p ${yas_PREFIX}/include/ && cp -r ${yas_PREFIX}/src/yas/include/yas ${yas_PREFIX}/include/
+)
+include_directories(${yas_PREFIX}/include)
+
 find_package(HPX REQUIRED)
 
 set(LINKLIBS    ${THRIFT_LIBRARIES}
@@ -237,6 +250,8 @@ set(CEREAL_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/cereal/record.cpp
 
 set(HPX_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/hpx/record.cpp)
 set(HPX_ZERO_COPY_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/hpx_zero_copy/record.cpp)
+ 
+set(YAS_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/yas/record.cpp)
 
 add_executable(test ${cpp_serializers_SOURCE_DIR}/test.cpp
                     ${THRIFT_SERIALIZATION_SOURCES}
@@ -247,8 +262,9 @@ add_executable(test ${cpp_serializers_SOURCE_DIR}/test.cpp
                     ${AVRO_SERIALIZATION_SOURCES}
                     ${HPX_SERIALIZATION_SOURCES}
                     ${HPX_ZERO_COPY_SERIALIZATION_SOURCES}
+                    ${YAS_SERIALIZATION_SOURCES}
 )
-add_dependencies(test thrift msgpack protobuf capnproto ${BOOST_DEPENDENCY} cereal avro hpx)
+add_dependencies(test thrift msgpack protobuf capnproto ${BOOST_DEPENDENCY} cereal avro hpx yas)
 target_link_libraries(test ${LINKLIBS})
 set_target_properties(test PROPERTIES COMPILE_FLAGS "-O3")
 if(MPI_FOUND)

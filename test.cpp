@@ -33,6 +33,7 @@
 #include "hpx/record.hpp"
 #include "hpx_zero_copy/record.hpp"
 #include "mpi/record.hpp"
+#include "yas/record.hpp"
 
 #include "data.hpp"
 
@@ -457,10 +458,10 @@ void hpx_zero_copy_serialization_test(size_t iterations)
     from_string(r2, serialized);
 
     if (r1 != r2) {
-        throw std::logic_error("hpx's case: deserialization failed");
+        throw std::logic_error("hpx_zero_copy's case: deserialization failed");
     }
 
-    std::cout << "hpx zero copy: size = " << serialized.size() << " bytes" << std::endl;
+    std::cout << "hpx_zero_copy: size = " << serialized.size() << " bytes" << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < iterations; i++) {
@@ -471,9 +472,8 @@ void hpx_zero_copy_serialization_test(size_t iterations)
     auto finish = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
 
-    std::cout << "hpx zero copy: time = " << duration << " milliseconds" << std::endl << std::endl;
+    std::cout << "hpx_zero_copy: time = " << duration << " milliseconds" << std::endl << std::endl;
 }
-
 
 void mpi_serialization_test(size_t iterations)
 {
@@ -503,6 +503,48 @@ void mpi_serialization_test(size_t iterations)
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
 
     std::cout << "mpi: time = " << duration << " milliseconds" << std::endl << std::endl;
+}
+
+void
+yas_serialization_test(size_t iterations)
+{
+    using namespace yas_test;
+
+    Record r1, r2;
+
+    for (size_t i = 0; i < kIntegers.size(); i++) {
+        r1.ids.push_back(kIntegers[i]);
+    }
+
+    for (size_t i = 0; i < kStringsCount; i++) {
+        r1.strings.push_back(kStringValue);
+    }
+
+    std::string serialized;
+
+    to_string(r1, serialized);
+    from_string(r2, serialized);
+
+    if (r1 != r2) {
+        throw std::logic_error("yas' case: deserialization failed");
+    }
+
+    std::cout << "yas: size = " << serialized.size() << " bytes" << std::endl;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < iterations; i++) {
+        yas::mem_ostream os;
+        yas::binary_oarchive<yas::mem_ostream> oa(os);
+        oa & r1;
+
+        yas::mem_istream is(os.get_intrusive_buffer());
+        yas::binary_iarchive<yas::mem_istream> ia(is);
+        ia & r2;
+    }
+    auto finish = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+
+    std::cout << "yas: time = " << duration << " milliseconds" << std::endl << std::endl;
 }
 
 int
@@ -590,6 +632,9 @@ main(int argc, char **argv)
             mpi_serialization_test(iterations);
         }
 #endif
+        if (names.empty() || names.find("yas") != names.end()) {
+            yas_serialization_test(iterations);
+        }
     } catch (std::exception &exc) {
         std::cerr << "Error: " << exc.what() << std::endl;
         return EXIT_FAILURE;
