@@ -34,6 +34,7 @@
 #include "hpx_zero_copy/record.hpp"
 #include "mpi/record.hpp"
 #include "yas/record.hpp"
+#include "flatbuffers/test_generated.h"
 
 #include "data.hpp"
 
@@ -547,6 +548,67 @@ yas_serialization_test(size_t iterations)
     std::cout << "yas: time = " << duration << " milliseconds" << std::endl << std::endl;
 }
 
+void
+flatbuffers_serialization_test(size_t iterations)
+{
+    using namespace flatbuffers_test;
+
+    std::vector<flatbuffers::Offset<flatbuffers::String>> strings;
+    strings.reserve(kStringsCount);
+
+    flatbuffers::FlatBufferBuilder builder;
+    for (size_t i = 0; i < kStringsCount; i++) {
+        strings.push_back(builder.CreateString(kStringValue));
+    }
+
+    auto ids_vec = builder.CreateVector(kIntegers);
+    auto strings_vec = builder.CreateVector(strings);
+    auto r1 = CreateRecord(builder, ids_vec, strings_vec);
+
+    builder.Finish(r1);
+
+    auto p = reinterpret_cast<char*>(builder.GetBufferPointer());
+    auto sz = builder.GetSize();
+    std::vector<char> buf(p, p + sz);
+
+    auto r2 = GetRecord(buf.data());
+    if (r2->strings()->size() != kStringsCount || r2->ids()->size() != kIntegers.size()) {
+        throw std::logic_error("flatbuffer's case: deserialization failed");
+    }
+
+    std::cout << "flatbuffers: size = " << builder.GetSize() << " bytes" << std::endl;
+
+    builder.ReleaseBufferPointer();
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < iterations; i++) {
+        builder.Clear();
+        strings.clear();
+        // buf.clear();
+
+        for (size_t i = 0; i < kStringsCount; i++) {
+            strings.push_back(builder.CreateString(kStringValue));
+        }
+
+        auto ids_vec = builder.CreateVector(kIntegers);
+        auto strings_vec = builder.CreateVector(strings);
+        auto r1 = CreateRecord(builder, ids_vec, strings_vec);
+        builder.Finish(r1);
+
+        auto p = reinterpret_cast<char*>(builder.GetBufferPointer());
+        auto sz = builder.GetSize();
+        std::vector<char> buf(p, p + sz);
+        auto r2 = GetRecord(buf.data());
+        (void)r2->ids()[0];
+
+        builder.ReleaseBufferPointer();
+    }
+    auto finish = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+
+    std::cout << "flatbuffers: time = " << duration << " milliseconds" << std::endl << std::endl;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -557,7 +619,7 @@ main(int argc, char **argv)
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     if (argc < 2) {
-        std::cout << "usage: " << argv[0] << " N [thrift-binary thrift-compact protobuf boost msgpack cereal avro hpx]";
+        std::cout << "usage: " << argv[0] << " N [thrift-binary thrift-compact protobuf boost msgpack cereal avro hpx capnproto flatbuffers yas]";
         std::cout << std::endl << std::endl;
         std::cout << "arguments: " << std::endl;
         std::cout << " N  -- number of iterations" << std::endl << std::endl;
@@ -634,6 +696,10 @@ main(int argc, char **argv)
 #endif
         if (names.empty() || names.find("yas") != names.end()) {
             yas_serialization_test(iterations);
+        }
+
+        if (names.empty() || names.find("flatbuffers") != names.end()) {
+            flatbuffers_serialization_test(iterations);
         }
     } catch (std::exception &exc) {
         std::cerr << "Error: " << exc.what() << std::endl;

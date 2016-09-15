@@ -1,9 +1,9 @@
-#### [Thrift](http://thrift.apache.org/) vs. [Protobuf](https://code.google.com/p/protobuf/) vs. [Boost.Serialization](http://www.boost.org/libs/serialization) vs. [Msgpack](http://msgpack.org/) vs. [Cereal](http://uscilab.github.io/cereal/index.html) vs. [Avro](http://avro.apache.org/) vs. [HPX](https://github.com/STEllAR-GROUP/hpx) serialization/deserialization time test for C++.
+#### [Thrift](http://thrift.apache.org/) vs. [Protobuf](https://code.google.com/p/protobuf/) vs. [Cap’n Proto](https://capnproto.org/) vs. [Boost.Serialization](http://www.boost.org/libs/serialization) vs. [Msgpack](http://msgpack.org/) vs. [FlatBuffers](https://google.github.io/flatbuffers/) vs. [Cereal](http://uscilab.github.io/cereal/index.html) vs. [Avro](http://avro.apache.org/) vs. [HPX](https://github.com/STEllAR-GROUP/hpx) vs. [MPI](https://www.open-mpi.org/) vs. [YAS](https://github.com/niXman/yas) serialization/deserialization time test for C++.
 
 #### Build
 This project does not have any external library dependencies. All (boost, thrift etc.) needed libraries are downloaded
 and built automatically except HPX (set HPX_DIR for latter), but you need enough free disk space to build all components. To build this project you need a compiler that supports
-C++11 features. Project was tested with GCC 4.9.1 (Ubuntu 14.04).
+C++11 features. Project was tested with GCC-6.2.0 (Ubuntu 14.04-x86_64).
 
 ```
 $ git clone https://github.com/thekvs/cpp-serializers.git
@@ -30,27 +30,36 @@ $ ./test 100000 protobuf cereal
 #### Results
 
 Following results were obtained running 1000000 serialize-deserialize operations 50 times and then averaging results
-on a typical desktop computer with Intel Xeon CPU E5-2450 processor running Debian. Compiler was gcc-6.0 (from trunk). Exact versions of libraries used are:
+on a typical desktop computer with `i5` processor running Ubuntu 14.04-x86_64. Compiler was GCC-6.2.0. Exact versions of libraries used are:
 
 * thrift 0.9.3
 * protobuf 2.6.0
-* boost 1.60.0
-* msgpack 0.5.9
-* cereal 1.1.2
+* capnproto 5.0.2
+* boost 1.59.0
+* msgpack 1.1.0
+* cereal 1.2.1
 * avro 1.7.7
-* hpx 0.9.12
+* hpx 1.0.0
+* mpi 3.0.3
+* yas master
 
 | serializer     | object's size | avg. total time |
 | -------------- | ------------- | --------------- |
-| thrift-binary  | 17017         | 28025           |
-| thrift-compact | 11597         | 33802           |
-| protobuf       | 12571         | 23843           |
-| boost          | 17470         | 16188           |
-| msgpack        | 11902         | 30051           |
-| cereal         | 17416         | 13083           |
-| avro           | 12288         | 38225           |
-| hpx            | 17433         | 12371           |
-| hpx_zero_copy  | 9433          | 8138            |
+| thrift-binary  | 17017         | 21653           |
+| thrift-compact | 11597         | 26672           |
+| protobuf       | 12571         | 19314           |
+| capnproto      | 17768         | 33 [1]          |
+| boost          | 17470         | 12046           |
+| msgpack        | 11802         | 26275           |
+| flatbuffers    | 17632         | 12381           |
+| cereal         | 17416         | 10073           |
+| avro           | 12288         | 29853           |
+| hpx            | 17433         | 12339           |
+| hpx_zero_copy  | 9433          | 8140            |
+| mpi            | 13008         | 7924            |
+| yas            | 17012         | 4210            |
+
+[[1](https://github.com/STEllAR-GROUP/cpp-serializers/pull/2#issuecomment-171014862)]
 
 Size measured in bytes, time measured in milliseconds.
 
@@ -58,8 +67,8 @@ Size measured in bytes, time measured in milliseconds.
 
 ###### Size
 
-![Size](images/size-hpx.png)
+![Size](images/size.png)
 
 ###### Time
 
-![Time](images/time-hpx.png)
+![Time](images/time.png)
