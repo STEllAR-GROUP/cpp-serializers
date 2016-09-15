@@ -36,19 +36,19 @@ size <- c(
 # data from the 1000000 simulations
 # for t in in thrift-binary thrift-compact protobuf capnproto boost msgpack flatbuffers cereal avro hpx hpx_zero_copy mpi yas; do rm -f /tmp/$t.time; echo -n "$t: "; for i in `seq 1 50`; do ./benchmark 1000000 $t | grep time | awk '{print $4}' >>/tmp/$t.time; done; awk '{ sum += $1 } END { print sum/50}' /tmp/$t.time; done
 time <- c(
-     2312  # thrift-binary
-    ,2718  # thrift-compact
-    ,1935  # protobuf
-    ,3     # capnproto
-    ,1117  # boost
-    ,2638  # msgpack
-    ,1292  # flatbuffers
-    ,996   # cereal
-    ,3097  # avro
-    ,1171  # hpx
-    ,815   # hpx_zero_copy
-    ,785   # mpi
-    ,457   # yas
+     21653 # thrift-binary
+    ,26672 # thrift-compact
+    ,19314 # protobuf
+    ,33    # capnproto
+    ,12046 # boost
+    ,26275 # msgpack
+    ,12381 # flatbuffers
+    ,10073 # cereal
+    ,29853 # avro
+    ,12339 # hpx
+    ,8140  # hpx_zero_copy
+    ,7924  # mpi
+    ,4210  # yas
 )
 
 data.size <- as.data.frame(list(serializer = names, size = size))
