@@ -56,8 +56,8 @@ else()
   ExternalProject_Add(
     boost
     PREFIX ${boost_PREFIX}
-    URL "http://netcologne.dl.sourceforge.net/project/boost/boost/1.59.0/boost_1_59_0.tar.gz"
-    URL_MD5 "51528a0e3b33d9e10aaa311d9eb451e3"
+    URL "http://netcologne.dl.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.bz2"
+    URL_MD5 "6095876341956f65f9d35939ccea1a9f"
     CONFIGURE_COMMAND ${boost_PREFIX}/src/boost/bootstrap.sh --with-libraries=serialization,filesystem,system,program_options,iostreams --prefix=${boost_PREFIX}
     BUILD_COMMAND ./bjam link=static cxxflags='-fPIC'
     INSTALL_COMMAND ./bjam link=static install
