@@ -56,8 +56,8 @@ else()
   ExternalProject_Add(
     boost
     PREFIX ${boost_PREFIX}
-    URL "http://netcologne.dl.sourceforge.net/project/boost/boost/1.56.0/boost_1_56_0.tar.gz"
-    URL_MD5 "8c54705c424513fa2be0042696a3a162"
+    URL "http://netcologne.dl.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.bz2"
+    URL_MD5 "6095876341956f65f9d35939ccea1a9f"
     CONFIGURE_COMMAND ${boost_PREFIX}/src/boost/bootstrap.sh --with-libraries=serialization,filesystem,system,program_options,iostreams --prefix=${boost_PREFIX}
     BUILD_COMMAND ./bjam link=static cxxflags='-fPIC'
     INSTALL_COMMAND ./bjam link=static install
@@ -90,9 +90,9 @@ set(msgpack_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/msgpack)
 ExternalProject_Add(
     msgpack
     PREFIX ${msgpack_PREFIX}
-    URL "https://github.com/msgpack/msgpack-c/releases/download/cpp-0.5.9/msgpack-0.5.9.tar.gz"
-    URL_MD5 "7645691e6966421c817a0b6f6f306112"
-    CONFIGURE_COMMAND CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} ${msgpack_PREFIX}/src/msgpack/configure --prefix=${msgpack_PREFIX} --enable-shared=no
+    URL "https://github.com/msgpack/msgpack-c/releases/download/cpp-1.1.0/msgpack-1.1.0.tar.gz"
+    URL_MD5 "ac41a64d6415fd184215825048bc4523"
+    CONFIGURE_COMMAND CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} ${msgpack_PREFIX}/src/msgpack/configure --prefix=${msgpack_PREFIX} --libdir=${msgpack_PREFIX}/lib --enable-shared=no --disable-debug
     BUILD_COMMAND $(MAKE)
     INSTALL_COMMAND $(MAKE) install
     BUILD_IN_SOURCE 1
@@ -135,7 +135,8 @@ set(cereal_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/cereal)
 ExternalProject_Add(
     cereal
     PREFIX ${cereal_PREFIX}
-    URL "https://github.com/USCiLab/cereal/archive/v1.1.2.tar.gz"
+    URL "https://github.com/USCiLab/cereal/archive/v1.2.1.tar.gz"
+    URL_MD5 "64476ed74c19068ee543b53ad3992261"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND mkdir -p ${cereal_PREFIX}/include/ && cp -r ${cereal_PREFIX}/src/cereal/include/cereal ${cereal_PREFIX}/include/
@@ -147,7 +148,8 @@ ExternalProject_Add(
     avro
     DEPENDS ${BOOST_DEPENDENCY}
     PREFIX ${avro_PREFIX}
-    URL "http://apache-mirror.rbc.ru/pub/apache/avro/avro-1.8.0/avro-src-1.8.0.tar.gz"
+    URL "http://apache.mirrors.spacedump.net/avro/avro-1.8.1/avro-src-1.8.1.tar.gz"
+    URL_MD5 "bc1901bd2a83956dbb9e7f968affc607"
     CONFIGURE_COMMAND cmake -DBOOST_INCLUDEDIR=${boost_PREFIX}/include -DBOOST_LIBRARYDIR=${boost_PREFIX}/lib -DBoost_NO_SYSTEM_PATHS=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${avro_PREFIX} -DBUILD_SHARED_LIBS=OFF ${avro_PREFIX}/src/avro/lang/c++/
     # Due to some issues with using statically built boost libraries AND zlib in avro tests
     # build only necessary parts and install them in a very hackish way.
@@ -158,13 +160,26 @@ include_directories(${avro_PREFIX}/include)
 set(AVRO_LIBRARIES ${avro_PREFIX}/lib/libavrocpp_s.a)
 set(AVRO_GENERATOR ${avro_PREFIX}/bin/avrogencpp)
 
+set(flatbuffers_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/flatbuffers)
+ExternalProject_Add(
+    flatbuffers
+    PREFIX ${flatbuffers_PREFIX}
+    URL "https://github.com/google/flatbuffers/archive/v1.3.0.tar.gz"
+    URL_MD5 "86d13e8c4c19c2bbadff86c5435b2fca"
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${flatbuffers_PREFIX} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    LOG_UPDATE ON
+    LOG_CONFIGURE ON
+    LOG_BUILD ON
+)
+include_directories(${flatbuffers_PREFIX}/include)
+set(FLATBUFFERS_LIBRARIES ${flatbuffers_PREFIX}/lib/libflatbuffers.a)
+set(FLATBUFFERS_GENERATOR ${flatbuffers_PREFIX}/bin/flatc)
+
 set(yas_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/yas)
 ExternalProject_Add(
     yas
-    DEPENDS boost
     PREFIX ${yas_PREFIX}
-#    URL "https://github.com/niXman/yas/archive/master.zip"
-    URL "https://github.com/pmed/yas/archive/improve-shared_buffer.zip"
+    URL "https://github.com/niXman/yas/archive/master.zip"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND mkdir -p ${yas_PREFIX}/include/ && cp -r ${yas_PREFIX}/src/yas/include/yas ${yas_PREFIX}/include/
@@ -173,16 +188,18 @@ include_directories(${yas_PREFIX}/include)
 
 find_package(HPX REQUIRED)
 
-set(LINKLIBS    ${THRIFT_LIBRARIES}
-                ${MSGPACK_LIBRARIES}
-                ${PROTOBUF_LIBRARIES}
-                ${CAPNPROTO_LIBRARIES}
-                ${BOOST_LIBRARIES}
-                ${AVRO_LIBRARIES}
-                ${CMAKE_THREAD_LIBS_INIT}
-                ${ZLIB_LIBRARIES}
-                ${HPX_LIBRARIES}
-                ${Boost_LIBRARIES}
+set(LINKLIBS
+    ${THRIFT_LIBRARIES}
+    ${MSGPACK_LIBRARIES}
+    ${PROTOBUF_LIBRARIES}
+    ${CAPNPROTO_LIBRARIES}
+    ${BOOST_LIBRARIES}
+    ${AVRO_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${ZLIB_LIBRARIES}
+    ${HPX_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${FLATBUFFERS_LIBRARIES}
 )
 
 add_custom_command(
@@ -245,6 +262,19 @@ set_source_files_properties(
 )
 set(AVRO_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/avro/record.hpp)
 
+add_custom_command(
+    DEPENDS ${cpp_serializers_SOURCE_DIR}/test.fbs
+    COMMAND ${FLATBUFFERS_GENERATOR}
+    ARGS --cpp -o ${cpp_serializers_SOURCE_DIR}/flatbuffers ${cpp_serializers_SOURCE_DIR}/test.fbs
+    OUTPUT "${cpp_serializers_SOURCE_DIR}/flatbuffers/test_generated.h"
+    COMMENT "Executing FlatBuffers compiler"
+)
+set_source_files_properties(
+    ${cpp_serializers_SOURCE_DIR}/flatbuffers/test_generated.h
+    PROPERTIES GENERATED TRUE
+)
+set(FLATBUFFERS_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/flatbuffers/test_generated.h)
+
 set(BOOST_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/boost/record.cpp)
 set(CEREAL_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/cereal/record.cpp)
 
@@ -253,18 +283,21 @@ set(HPX_ZERO_COPY_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/hpx_zero_c
  
 set(YAS_SERIALIZATION_SOURCES ${cpp_serializers_SOURCE_DIR}/yas/record.cpp)
 
-add_executable(test ${cpp_serializers_SOURCE_DIR}/test.cpp
-                    ${THRIFT_SERIALIZATION_SOURCES}
-                    ${PROTOBUF_SERIALIZATION_SOURCES}
-                    ${CAPNPROTO_SERIALIZATION_SOURCES}
-                    ${BOOST_SERIALIZATION_SOURCES}
-                    ${CEREAL_SERIALIZATION_SOURCES}
-                    ${AVRO_SERIALIZATION_SOURCES}
-                    ${HPX_SERIALIZATION_SOURCES}
-                    ${HPX_ZERO_COPY_SERIALIZATION_SOURCES}
-                    ${YAS_SERIALIZATION_SOURCES}
+add_executable(test
+    ${cpp_serializers_SOURCE_DIR}/test.cpp
+    ${THRIFT_SERIALIZATION_SOURCES}
+    ${PROTOBUF_SERIALIZATION_SOURCES}
+    ${CAPNPROTO_SERIALIZATION_SOURCES}
+    ${BOOST_SERIALIZATION_SOURCES}
+    ${CEREAL_SERIALIZATION_SOURCES}
+    ${AVRO_SERIALIZATION_SOURCES}
+    ${HPX_SERIALIZATION_SOURCES}
+    ${HPX_ZERO_COPY_SERIALIZATION_SOURCES}
+    ${YAS_SERIALIZATION_SOURCES}
+    ${FLATBUFFERS_SERIALIZATION_SOURCES}
 )
-add_dependencies(test thrift msgpack protobuf capnproto ${BOOST_DEPENDENCY} cereal avro hpx yas)
+
+add_dependencies(test thrift msgpack protobuf capnproto ${BOOST_DEPENDENCY} cereal avro hpx yas flatbuffers)
 target_link_libraries(test ${LINKLIBS})
 set_target_properties(test PROPERTIES COMPILE_FLAGS "-O3")
 if(MPI_FOUND)

@@ -8,7 +8,7 @@ void
 to_string(const Record &record, std::string& data)
 {
     chunks.clear();
-    hpx::serialization::output_archive archiver(data, 0u, 0u, &chunks);
+    hpx::serialization::output_archive archiver(data, 0, &chunks);
     archiver << record;
 }
 
